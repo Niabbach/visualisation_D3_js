@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Visualisation D3.js</title>
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <style>
+    body {
+      font-family: sans-serif;
+      background: #0f172a;
+      color: white;
+      padding: 20px;
+    }
+
+    h2 {
+      color: #38bdf8;
+    }
+
+    .chart {
+      margin: 40px 0;
+    }
+
+    svg {
+      background: #020617;
+      border-radius: 10px;
+    }
+
+    .axis line, .axis path {
+      stroke: #fff;
+    }
+
+    .axis text {
+      fill: #fff;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>D3.js – Visualisation Interactive</h1>
+
+  <div class="chart" id="line-chart">
+    <h2>Courbe (Line Chart)</h2>
+  </div>
+
+  <div class="chart" id="bar-chart">
+    <h2>Barres (Bar Chart)</h2>
+  </div>
+
+  <div class="chart" id="scatter-chart">
+    <h2>Scatter Plot</h2>
+  </div>
+
+<script>
+const width = 600;
+const height = 300;
+const margin = {top: 20, right: 30, bottom: 40, left: 50};
+
+// --- Exemple de données ---
+const lineData = d3.range(50).map(i => ({x: i, y: Math.sin(i/5)*10 + 50}));
+const barData = d3.range(10).map(i => ({x: "Cat" + i, y: Math.floor(Math.random()*100)}));
+const scatterData = d3.range(50).map(i => ({x: Math.random()*100, y: Math.random()*100})) ;
+
+// --- Fonction Zoom ---
+function zoomed(event, g) {
+  g.attr("transform", event.transform);
+}
+
+// --- LINE CHART ---
+{
+  const svg = d3.select("#line-chart").append("svg")
+    .attr("width", width)
+    .attr("height", height);
+
+  const g = svg.append("g").attr("transform", `translate(${margin.left},${margin.top})`);
+
+  const x = d3.scaleLinear()
+      .domain(d3.extent(lineData, d => d.x))
+      .range([0, width - margin.left - margin.right]);
+  const y = d3.scaleLinear()
+      .domain([0, d3.max(lineData, d => d.y)])
+      .range([height - margin.top - margin.bottom, 0]);
+
+  const xAxis = d3.axisBottom(x);
+  const yAxis = d3.axisLeft(y);
+
+  const chartG = g.append("g");
+
+  chartG.append("g")
+      .attr("class", "x axis")
+      .attr("transform", `translate(0,${height - margin.top - margin.bottom})`)
+      .call(xAxis);
+  chartG.append("g")
+      .attr("class", "y axis")
+      .call(yAxis);
+
+  const line = d3.line()
+      .x(d => x(d.x))
+      .y(d => y(d.y));
+
+  chartG.append("path")
+      .datum(lineData)
+      .attr("fill", "none")
+      .attr("stroke", "#38bdf8")
+      .attr("stroke-width", 2)
+      .attr("d", line);
+
+  svg.call(d3.zoom()
+    .scaleExtent([1, 10])
+    .on("zoom", (event) => zoomed(event, chartG))
+  );
+}
+
+// --- BAR CHART ---
+{
+  const svg = d3.select("#bar-chart").append("svg")
+      .attr("width", width)
+      .attr("height", height);
+
+  const g = svg.append("g").attr("transform", `translate(${margin.left},${margin.top})`);
+
+  const x = d3.scaleBand()
+      .domain(barData.map(d => d.x))
+      .range([0, width - margin.left - margin.right])
+      .padding(0.2);
+
+  const y = d3.scaleLinear()
+      .domain([0, d3.max(barData, d => d.y)])
+      .range([height - margin.top - margin.bottom, 0]);
+
+  const chartG = g.append("g");
+
+  chartG.append("g")
+      .attr("transform", `translate(0,${height - margin.top - margin.bottom})`)
+      .call(d3.axisBottom(x));
+  chartG.append("g")
+      .call(d3.axisLeft(y));
+
+  chartG.selectAll(".bar")
+      .data(barData)
+      .join("rect")
+      .attr("class", "bar")
+      .attr("x", d => x(d.x))
+      .attr("y", d => y(d.y))
+      .attr("width", x.bandwidth())
+      .attr("height", d => height - margin.top - margin.bottom - y(d.y))
+      .attr("fill", "#38bdf8");
+
+  svg.call(d3.zoom()
+    .scaleExtent([1, 10])
+    .on("zoom", (event) => zoomed(event, chartG))
+  );
+}
+
+// --- SCATTER PLOT ---
+{
+  const svg = d3.select("#scatter-chart").append("svg")
+      .attr("width", width)
+      .attr("height", height);
+
+  const g = svg.append("g").attr("transform", `translate(${margin.left},${margin.top})`);
+
+  const x = d3.scaleLinear()
+      .domain([0, 100])
+      .range([0, width - margin.left - margin.right]);
+
+  const y = d3.scaleLinear()
+      .domain([0, 100])
+      .range([height - margin.top - margin.bottom, 0]);
+
+  const chartG = g.append("g");
+
+  chartG.append("g")
+      .attr("transform", `translate(0,${height - margin.top - margin.bottom})`)
+      .call(d3.axisBottom(x));
+  chartG.append("g")
+      .call(d3.axisLeft(y));
+
+  chartG.selectAll("circle")
+      .data(scatterData)
+      .join("circle")
+      .attr("cx", d => x(d.x))
+      .attr("cy", d => y(d.y))
+      .attr("r", 5)
+      .attr("fill", "#38bdf8");
+
+  svg.call(d3.zoom()
+    .scaleExtent([1, 10])
+    .on("zoom", (event) => zoomed(event, chartG))
+  );
+}
+</script>
+
+</body>
+</html>
